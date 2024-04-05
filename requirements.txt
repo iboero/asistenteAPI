@@ -8,4 +8,4 @@ dill
 pyprojroot
 flask
 python-dotenv
-chromadb
+chromadb==0.3.29
