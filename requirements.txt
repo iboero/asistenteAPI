@@ -7,3 +7,4 @@ langchain_anthropic
 dill
 pyprojroot
 flask
+python-dotenv
