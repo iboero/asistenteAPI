@@ -9,4 +9,3 @@ pyprojroot
 uuid
 flask
 asyncio
-csv
