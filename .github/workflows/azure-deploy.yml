@@ -1,0 +1,40 @@
+name: Build and deploy Python app to Azure Web App
+
+on:
+  push:
+    branches:
+      - main  # Set to your default branch
+  pull_request:
+    branches:
+      - main  # Set to your default branch
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Python version
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.8'  # Set to your Python version
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    # Uncomment and modify the next steps if you have tests
+    #- name: Test with pytest
+    #  run: |
+    #    pip install pytest
+    #    pytest
+
+    - name: 'Deploy to Azure Web App'
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: 'YourAppName'  # Set your app name here
+        slot-name: 'production'  # Optional: if using deployment slots
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+        package: .
