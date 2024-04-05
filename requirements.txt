@@ -6,6 +6,4 @@ langchain_openai
 langchain_anthropic
 dill
 pyprojroot
-uuid
 flask
-asyncio
