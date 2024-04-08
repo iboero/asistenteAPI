@@ -105,8 +105,10 @@ def get_method_info(method:str, sistem: str="all"):
         ret_metods_names = [met.metadata["nombre"] for met in ret_metods]
         ret_metods_sistems = [met.metadata["sistema"] for met in ret_metods]
         for met in metodos_lista:
-            if met.name.lower().strip() == ret_metods_names.lower().strip() and met.sistem.lower().strip() == ret_metods_sistems.lower().strip():
-                ret_metodos_obj.append(met)
+            if met.nombre in ret_metods_names:
+                indices = [indice for indice, elemento in enumerate(ret_metods_names) if elemento == met.nombre]
+                if met.sistema in [ret_metods_sistems[i] for i in indices]:
+                    ret_metodos_obj.append(met)
 
     resp = ""
     for metod in ret_metodos_obj:
