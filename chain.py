@@ -4,6 +4,7 @@ from pyprojroot import here
 import os
 from uuid import uuid4
 from langsmith import Client
+from langchain.docstore.document import Document
 
 import csv
 from langchain_core.prompts import ChatPromptTemplate
@@ -35,12 +36,20 @@ os.environ["LANGCHAIN_PROJECT"] = f"API - {unique_id}"
 
 
 # LEVANTAR DATOS
-db_ret = Chroma(persist_directory="db_RAG", embedding_function=OpenAIEmbeddings())
-db_ret_2 = Chroma(persist_directory="db_RAG", embedding_function=OpenAIEmbeddings())
+# db_ret = Chroma(persist_directory="db_RAG", embedding_function=OpenAIEmbeddings())
+# db_ret_2 = Chroma(persist_directory="db_RAG", embedding_function=OpenAIEmbeddings())
 with open('metodos_obj_str.pkl', 'rb') as archivo:
     metodos_lista = pickle.load(archivo)
 
+db = Chroma(persist_directory="db_RAG", embedding_function=OpenAIEmbeddings())
+db.delete_collection()
+docs = []
 
+for metod in metodos_lista:
+    docs.append(Document(page_content=metod.descripcion, metadata={"nombre":metod.nombre,"sistema":metod.sistema}))
+
+embedding_function = OpenAIEmbeddings()
+db_ret = Chroma.from_documents(docs, embedding_function, persist_directory="db_RAG")
 
 # DEFINIR TOOLS
 
@@ -92,7 +101,7 @@ def get_method_info(method:str, sistem: str="all"):
 
     # In case exact match doesnt work
     if len(ret_metodos_obj) == 0:
-        ret_metods = db_ret_2.similarity_search(method,k=2)
+        ret_metods = db_ret.similarity_search(method,k=2)
         ret_metods_name = ret_metods.name
         ret_metods_sistem = ret_metods.sistem
         for met in metodos_lista:

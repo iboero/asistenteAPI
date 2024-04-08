@@ -59,7 +59,7 @@ def generate_data(message):
     for m in chat_history:
         chat_history_string += f"{m.type}: {m.content} \n"
     # resp = agent_executor.invoke({"input":message,"chat_history":chat_history})["output"]
-    resp = agent_executor_anth.invoke({"input":message,"chat_history":chat_history_string})["output"]
+    resp = agent_executor.invoke({"input":message,"chat_history":chat_history})["output"]
 
     resp_html = resp.replace("\n", "||")
     yield f"data: {resp_html}\n\n"
