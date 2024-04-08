@@ -45,6 +45,8 @@ chat_history = []
 # Levantar servidor
 @app.route('/')
 def home():
+    global chat_history
+    chat_history = []
     return render_template_string(HTML)
 
 @app.route('/health')

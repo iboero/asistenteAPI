@@ -36,20 +36,24 @@ os.environ["LANGCHAIN_PROJECT"] = f"API - {unique_id}"
 
 
 # LEVANTAR DATOS
-# db_ret = Chroma(persist_directory="db_RAG", embedding_function=OpenAIEmbeddings())
-# db_ret_2 = Chroma(persist_directory="db_RAG", embedding_function=OpenAIEmbeddings())
+
+crear_dataset = True
 with open('metodos_obj_str.pkl', 'rb') as archivo:
     metodos_lista = pickle.load(archivo)
 
-db = Chroma(persist_directory="db_RAG", embedding_function=OpenAIEmbeddings())
-db.delete_collection()
-docs = []
 
-for metod in metodos_lista:
-    docs.append(Document(page_content=metod.descripcion, metadata={"nombre":metod.nombre,"sistema":metod.sistema}))
+if crear_dataset:
+    db = Chroma(persist_directory="db_RAG", embedding_function=OpenAIEmbeddings())
+    db.delete_collection()
+    docs = []
 
-embedding_function = OpenAIEmbeddings()
-db_ret = Chroma.from_documents(docs, embedding_function, persist_directory="db_RAG")
+    for metod in metodos_lista:
+        docs.append(Document(page_content=metod.descripcion, metadata={"nombre":metod.nombre,"sistema":metod.sistema}))
+
+    embedding_function = OpenAIEmbeddings()
+    db_ret = Chroma.from_documents(docs, embedding_function, persist_directory="db_RAG")
+else:
+    db_ret = Chroma(persist_directory="db_RAG", embedding_function=OpenAIEmbeddings())
 
 # DEFINIR TOOLS
 
