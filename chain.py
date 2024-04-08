@@ -102,10 +102,10 @@ def get_method_info(method:str, sistem: str="all"):
     # In case exact match doesnt work
     if len(ret_metodos_obj) == 0:
         ret_metods = db_ret.similarity_search(method,k=2)
-        ret_metods_name = ret_metods.name
-        ret_metods_sistem = ret_metods.sistem
+        ret_metods_names = [met.metadata["nombre"] for met in ret_metods]
+        ret_metods_sistems = [met.metadata["sistema"] for met in ret_metods]
         for met in metodos_lista:
-            if met.name.lower().strip() == ret_metods_name.lower().strip() and met.sistem.lower().strip() == ret_metods_sistem.lower().strip():
+            if met.name.lower().strip() == ret_metods_names.lower().strip() and met.sistem.lower().strip() == ret_metods_sistems.lower().strip():
                 ret_metodos_obj.append(met)
 
     resp = ""
