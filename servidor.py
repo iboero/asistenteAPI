@@ -35,18 +35,16 @@ HTML = importar_html_como_string("pagina_web.html"  )
 
 
 # VARIABLES GLOBALES
-selected_option = None
-ultima_respuesta = ""
-ultima_pregunta = ""
-chat_history = []
+# selected_option = None
+ultima_respuesta = {}
+ultima_pregunta = {}
+chat_histories = {}
 
 # FUNCIONES ASOCIADAS A JS
 
 # Levantar servidor
 @app.route('/')
 def home():
-    global chat_history
-    chat_history = []
     return render_template_string(HTML)
 
 @app.route('/health')
@@ -54,72 +52,44 @@ def health_check():
     return 'OK', 200
 
 # ## Manejar Respuesta
-def generate_data(message):
+def generate_data(message,tab_id):
     global ultima_respuesta
+    global chat_histories
     resp = ""
-    chat_history_string = ""
-    for m in chat_history:
-        chat_history_string += f"{m.type}: {m.content} \n"
+    chat_history = chat_histories[tab_id]
+    # chat_history_string = ""
+    # for m in chat_history:
+    #     chat_history_string += f"{m.type}: {m.content} \n"
     # resp = agent_executor.invoke({"input":message,"chat_history":chat_history})["output"]
     resp = agent_executor.invoke({"input":message,"chat_history":chat_history})["output"]
 
     resp_html = resp.replace("\n", "||")
     yield f"data: {resp_html}\n\n"
-    ultima_respuesta = resp
+    ultima_respuesta[tab_id] = resp
     chat_history.append(HumanMessage(content=message))
     chat_history.append(AIMessage(content=resp))
-    # resp = resp.replace("\n", "||")
-    # yield f"data: {resp}\n\n"
+    chat_histories[tab_id] = chat_history
     yield "data: done\n\n"
 
-# def generate_data(message):
-#     # Esta es la función que realmente queremos ejecutar de forma asíncrona
-#     async def async_generator():
-#         global chat_history
-#         global ultima_respuesta
-#         resp = ""
-#         print("Genrando chunks")
-#         async for chunk in agent_executor.astream_events({"input":message,"chat_history":chat_history}, version="v1"):
-#             print(chunk)
-#             if chunk["event"] == "on_chat_model_stream":
-#                 content = chunk["data"]["chunk"].content.replace("\n", "||")
-#                 resp += chunk["data"]["chunk"].content
-#                 yield f"data: {content}\n\n"
-#         chat_history.append(HumanMessage(content=message))
-#         chat_history.append(AIMessage(content=resp))
-#         ultima_respuesta = resp
-#         yield "data: done\n\n"
-
-#     # Crear un nuevo evento loop en el hilo actual
-#     loop = asyncio.new_event_loop()
-#     asyncio.set_event_loop(loop)
-
-#     # Ejecutar la corutina en el hilo y recoger los resultados
-#     try:
-#         async_gen = async_generator()
-#         while True:
-#             try:
-#                 data = loop.run_until_complete(async_gen.__anext__())
-#                 yield data
-#             except StopAsyncIteration:
-#                 break
-#     finally:
-#         loop.close()
 
 @app.route('/send', methods=['POST'])
 def send():
     global ultima_pregunta
     global ultima_respuesta
     data = request.json
-    ultima_pregunta = data['message']
+    tab_id = data['tabId']
+    if tab_id not in chat_histories:
+        chat_histories[tab_id] = []
+    ultima_pregunta[tab_id] = data['message']
     return jsonify({'status': 'success'}), 200
 
 
 @app.route('/stream')
 def stream():
-    print("Respondiendo pregunta")
+    tab_id = request.args.get('tabId')
+    print(F"Respondiendo pregunta de {tab_id}")
     global ultima_pregunta
-    return Response(stream_with_context(generate_data(ultima_pregunta)), mimetype='text/event-stream')
+    return Response(stream_with_context(generate_data(ultima_pregunta[tab_id],tab_id)), mimetype='text/event-stream')
 
 
 ## Cambiar Sistema
@@ -133,9 +103,11 @@ def update_option():
 
 @app.route('/new_chat', methods=['POST'])
 def handle_new_chat():
-    global chat_history
-    chat_history = []
-    return jsonify({'status': 'new chat started'})  # Respuesta opcional
+    global chat_histories
+    data = request.json
+    tab_id = data['tabId']
+    chat_histories[tab_id] = []
+    return jsonify({'status': 'new chat for {tabId}'})  # Respuesta opcional
 
 
 ## Manejar Feedback
@@ -143,15 +115,15 @@ def handle_new_chat():
 def feedback():
     global ultima_pregunta
     global ultima_respuesta
-    global ultima_seccion
     data = request.json
     feedback = data['feedback']
+    tab_id = data['tabId']
     positive = int(data["positive"])*2 - 1
     with open('feedback.csv', mode='a', newline='', encoding='utf-8') as file:
         writer = csv.writer(file)
         if file.tell() == 0:
             writer.writerow(["Pregunta","Respuesta","Seccion","Positivo","Comentario"])
-        writer.writerow([ultima_pregunta,ultima_respuesta,selected_option, positive, feedback])
+        writer.writerow([ultima_pregunta[tab_id],ultima_respuesta[tab_id],selected_option, positive, feedback])
     print([ultima_pregunta,ultima_respuesta, feedback])
     return jsonify({'status': 'Feedback recibido'})
 

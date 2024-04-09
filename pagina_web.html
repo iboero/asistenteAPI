@@ -190,10 +190,9 @@
     </style>
 </head>
 <body>
-    <div id="menu">
+    <!-- <div id="menu">
         <div id="menuTitle"><span style="color: red;">&gt;</span>Opciones</div>
         <hr>
-        <!-- Menú desplegable para Sistemas -->
         <div class="menuSection">
             <select id="sistemasSelect">
                 <option value="Todos">Todos</option>
@@ -224,27 +223,8 @@
                 <option data-value="Workflow">Workflow</option>
             </select>
         </div>
-
-        <!-- <hr>
-
-        <div class="menuSection" style="display: flex; justify-content: space-between; align-items: center;">
-            <div>Buscar Registro:</div>
-            <div class="toggleContainer" id="toggleCampo">
-                <div class="toggleButton"></div>
-            </div>
-        </div>
-
         <hr>
-
-        <div class="menuSection" style="display: flex; justify-content: space-between; align-items: center;">
-            <div>Historial de Chat:</div>
-            <div class="toggleContainer" id="toggleHistorial">
-                <div class="toggleButton"></div>
-            </div>
-        </div> -->
-
-        <hr>
-    </div>
+    </div> -->
     <div id="content">
         <div class="header">
             <button id="newChatButton">+</button>
@@ -324,6 +304,7 @@
                 headers: {
                     'Content-Type': 'application/json',
                 },
+                body: JSON.stringify({tabId: tabId}),
             })
             .then(response => response.json())
             .then(data => {
@@ -336,18 +317,18 @@
 
        
 
-        document.getElementById('sistemasSelect').addEventListener('change', function() {
-            const selectedOption = this.value;
-            console.log("Opción seleccionada:", selectedOption); // Para propósitos de depuración
-            // actualizarPreguntasPredefinidas(preguntasPorOpcion[selectedOption]);
-            fetch('/update_option', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({option: selectedOption}),
-            });
-        });
+        // document.getElementById('sistemasSelect').addEventListener('change', function() {
+        //     const selectedOption = this.value;
+        //     console.log("Opción seleccionada:", selectedOption); // Para propósitos de depuración
+        //     // actualizarPreguntasPredefinidas(preguntasPorOpcion[selectedOption]);
+        //     fetch('/update_option', {
+        //         method: 'POST',
+        //         headers: {
+        //             'Content-Type': 'application/json',
+        //         },
+        //         body: JSON.stringify({option: selectedOption, tabId: tabId}),
+        //     });
+        // });
 
         // let isCampo = false; // Estado inicial para "Buscar Campo"
         // let isHistorial = false; // Estado inicial para "Historial de Chat"
@@ -419,7 +400,11 @@
         //     document.getElementById('message').value = question; // Establece la pregunta en el campo de mensaje
         //     sendMessage(); // Llama a la función que ya tienes para enviar mensajes
         // }
-
+        let tabId = sessionStorage.getItem('tabId');
+        if (!tabId) {
+            tabId = Date.now().toString() + Math.random().toString();
+            sessionStorage.setItem('tabId', tabId);
+        }
 
         function sendMessage() {
             if (awaitingResponse) return;
@@ -448,10 +433,10 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({message: message}),
+                    body: JSON.stringify({message: message, tabId: tabId}), 
                 }).then(response => {
                     // Aquí, iniciar EventSource tras éxito del POST inicial
-                    var eventSource = new EventSource('/stream'); // Usar una nueva ruta, por ejemplo, '/stream'
+                    var eventSource = new EventSource('/stream?tabId=' + encodeURIComponent(tabId));; // Usar una nueva ruta, por ejemplo, '/stream'
                     let messageContainer;
                     eventSource.onmessage = function(event) {
                         const data = event.data;
@@ -581,7 +566,7 @@
                         headers: {
                             'Content-Type': 'application/json',
                         },
-                        body: JSON.stringify({feedback: feedbackText, positive:Ispositive}),
+                        body: JSON.stringify({feedback: feedbackText, positive:Ispositive,tabId: tabId}),
                     })
                     .then(response => response.json())
                     .then(data => console.log(data))
@@ -599,12 +584,12 @@
         window.onload = adjustHeight;
         document.addEventListener('DOMContentLoaded', (event) => {
             // Obtiene el elemento select
-            const selectElement = document.getElementById('sistemasSelect');
+            // const selectElement = document.getElementById('sistemasSelect');
 
             // Establece el valor del select al primer elemento de la lista si necesitas especificar uno
             // Nota: Por defecto, el primer elemento ya estará seleccionado, pero si necesitas simular
             // un cambio para cargar contenido relacionado o realizar otras acciones, puedes hacerlo así:
-            selectElement.value = "Todos"; // Opcional, si necesitas seleccionar un valor específico
+            // selectElement.value = "Todos"; // Opcional, si necesitas seleccionar un valor específico
 
             // Crea y dispara el evento de cambio para el select
             const eventChange = new Event('change');
