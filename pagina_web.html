@@ -461,7 +461,7 @@
                                 messageContainer.innerHTML = '<b>Asistente</b><br>';
                                 chat.appendChild(messageContainer);
                             }
-                            messageContainer.innerHTML += data.replace(/\|\|/g, '<br>').replace(/\t/g, '&nbsp;&nbsp;&nbsp;&nbsp;');
+                            messageContainer.innerHTML += data.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\|\|/g, '<br>').replace(/\t/g, '&nbsp;&nbsp;&nbsp;&nbsp;');
                             chat.scrollTop = chat.scrollHeight;
                         }
                     };

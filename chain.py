@@ -68,17 +68,20 @@ class method_name(BaseModel):
 def get_method(method_description:str):
     """ Returns a list of possible methods provided a description. """
     filter={}
-    ret_metods = db_ret.similarity_search(method_description,k=5,filter=filter)
+    ret_metods = db_ret.similarity_search(method_description,k=10,filter=filter)
     ret_metods_names = [met.metadata["nombre"] for met in ret_metods]
     ret_metods_sistems = [met.metadata["sistema"] for met in ret_metods]
     ret_metodos_obj = []
-
+    indices_list = []
     for met in metodos_lista:
         if met.nombre in ret_metods_names:
             indices = [indice for indice, elemento in enumerate(ret_metods_names) if elemento == met.nombre]
-            if met.sistema in [ret_metods_sistems[i] for i in indices]:
-                ret_metodos_obj.append(met)
-
+            for i in indices:
+                if met.sistema in ret_metods_sistems[i]: 
+                    ret_metodos_obj.append(met)
+                    indices_list.append(i)
+    ret_metodos_obj_orden = sorted(zip(indices_list, ret_metodos_obj))
+    ret_metodos_obj = [elemento for valor, elemento in ret_metodos_obj_orden]
     resp = ""
     for metod in ret_metodos_obj:
         resp +=  method_info_as_string(metod) + "\n"
@@ -135,7 +138,20 @@ tools = [get_method, get_method_info]
 
 openai = ChatOpenAI(model="gpt-3.5-turbo",temperature=0.0,streaming=True)
 antrhopic = ChatAnthropic(temperature=0, model_name="claude-3-haiku-20240307")
+
 chat_template = ChatPromptTemplate.from_messages(
+    [
+        ("system", """Task: You are a helpful assistant, expert on the API documentation of Bantotal. You must answer users question IN SPANISH. 
+
+Instructions: All information in your answers must be retrieved from the use of the tools provided or based on previous information from the chat history. In case the question can´t be answered  using the tools provided (It is not relevant to the API documentation) honestly say that you can not answer that question.
+
+Be detailed in your answers but stay focused to the question. Add all details that are useful to provide a complete answer, but do not add details beyond the scope of the question."""),
+        MessagesPlaceholder(variable_name="chat_history"),
+        ("human", "{input}"),
+        MessagesPlaceholder(variable_name="agent_scratchpad"),
+    ]
+) 
+chat_template_v1 = ChatPromptTemplate.from_messages(
     [
         ("system", """Task: You are a helpful assistant. You must answer users question IN SPANISH. To obtain the information needed, use the tools provided or rely on the chat history. Under no circunstances invent information. Be detailed but stay relevant to the question on your answers, following the instructions the user demands."""),
         MessagesPlaceholder(variable_name="chat_history"),
@@ -143,6 +159,8 @@ chat_template = ChatPromptTemplate.from_messages(
         MessagesPlaceholder(variable_name="agent_scratchpad"),
     ]
 )
+
+
 chat_anthropic_template = PromptTemplate.from_template("""
 You are a helpful assistant. You must answer users question IN SPANISH. Be detailed but stay relevant to the question on your answers, following the instructions the user demands. 
 
