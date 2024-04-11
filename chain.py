@@ -22,6 +22,7 @@ from langchain.pydantic_v1 import BaseModel, Field
 from langchain.tools import BaseTool, StructuredTool, tool
 from langchain_core.utils.function_calling import convert_to_openai_function
 
+import unicodedata
 import dill as pickle
 
 ## INICIAR LANGSMITH Y API KEYS
@@ -36,8 +37,13 @@ os.environ["LANGCHAIN_PROJECT"] = f"API - {unique_id}"
 
 
 # LEVANTAR DATOS
+def remover_tildes(input_str):
+    # Normalizar la cadena de texto a 'NFD' para descomponer los acentos
+    normalized_str = unicodedata.normalize('NFD', input_str)
+    # Filtrar para quitar los caracteres de combinación (diacríticos)
+    return ''.join(c for c in normalized_str if unicodedata.category(c) != 'Mn')
 
-crear_dataset = True
+crear_dataset = False
 with open('metodos_obj_str.pkl', 'rb') as archivo:
     metodos_lista = pickle.load(archivo)
 
@@ -50,24 +56,29 @@ if crear_dataset:
     for metod in metodos_lista:
         docs.append(Document(page_content=metod.descripcion, metadata={"nombre":metod.nombre,"sistema":metod.sistema}))
 
-    embedding_function = OpenAIEmbeddings()
-    db_ret = Chroma.from_documents(docs, embedding_function, persist_directory="db_RAG")
+    db_ret = Chroma.from_documents(docs, OpenAIEmbeddings(), persist_directory="db_RAG")
 else:
     db_ret = Chroma(persist_directory="db_RAG", embedding_function=OpenAIEmbeddings())
 
 # DEFINIR TOOLS
 
+class sistem(BaseModel):
+    sistem: str = Field(description="Sistem to which get the method")
+
 class method_decription(BaseModel):
     method_description: str = Field(description="Description of what the method should do")
+    sistem: str = Field(description="Sistem to which the method belongs to", default="all")
 
 class method_name(BaseModel):
     method: str = Field(description="Method to search information of")
     sistem: str = Field(description="Sistem to which the method belongs to", default="all")
 
 @tool("get_methods_from_description", args_schema=method_decription)
-def get_method(method_description:str):
-    """ Returns a list of possible methods provided a description. """
+def get_method(method_description:str, sistem: str="all"):
+    """ Returns a list of possible methods provided a description. The parameter sistem is used to filter the search of the methods to a given sistem"""
     filter={}
+    if sistem != "all":
+        filter = {"sistema":remover_tildes(sistem.replace(" ", ""))}
     ret_metods = db_ret.similarity_search(method_description,k=10,filter=filter)
     ret_metods_names = [met.metadata["nombre"] for met in ret_metods]
     ret_metods_sistems = [met.metadata["sistema"] for met in ret_metods]
@@ -85,12 +96,11 @@ def get_method(method_description:str):
     resp = ""
     for metod in ret_metodos_obj:
         resp +=  method_info_as_string(metod) + "\n"
-
     return resp
 
 @tool("get_method_info_from_name", args_schema=method_name)
 def get_method_info(method:str, sistem: str="all"):
-    """ Returns information (input-ouput squeema, possible errors and calling example using Soap or JSON) of a method.  """
+    """ Returns information (input-ouput squeema, possible errors and calling example using Soap or JSON) of a method. The parameter sistem is used to filter the search of the method to a given sistem """
 
     # Search for the method exactly
     possible_methods = []
@@ -116,12 +126,30 @@ def get_method_info(method:str, sistem: str="all"):
                 indices = [indice for indice, elemento in enumerate(ret_metods_names) if elemento == met.nombre]
                 if met.sistema in [ret_metods_sistems[i] for i in indices]:
                     ret_metodos_obj.append(met)
-
     resp = ""
     for metod in ret_metodos_obj:
         resp +=  method_info_as_string(metod,params_info=True) + "\n"
     return resp
 
+
+@tool("get_all_method_from_sistem", args_schema=sistem)
+def get_all_method_from_sistem(sistem: str="all"):
+    """ Returns all methods for a given sistem. """
+
+    ret_metodos_obj = []
+    for met in metodos_lista:
+         if met.sistema.lower().strip() == remover_tildes(sistem.lower().strip()):
+            ret_metodos_obj.append(met)
+
+
+    if len(ret_metodos_obj) == 0:
+        resp = "El sistema {sistem} no es parte de Bantotal"
+    else:
+        resp = ""
+        for metod in ret_metodos_obj:
+            resp +=  method_info_as_string(metod) + "\n"
+            
+    return resp
 
 def method_info_as_string(metod,params_info=False):
     strng  = ""
@@ -131,7 +159,7 @@ def method_info_as_string(metod,params_info=False):
         strng  += f"{metod.ej_in} \n {metod.ej_out}"
     return strng
 
-tools = [get_method, get_method_info]
+tools = [get_method, get_method_info,get_all_method_from_sistem]
 
 
 # DEFINIR AGENTE
@@ -145,7 +173,38 @@ chat_template = ChatPromptTemplate.from_messages(
 
 Instructions: All information in your answers must be retrieved from the use of the tools provided or based on previous information from the chat history. In case the question can´t be answered  using the tools provided (It is not relevant to the API documentation) honestly say that you can not answer that question.
 
-Be detailed in your answers but stay focused to the question. Add all details that are useful to provide a complete answer, but do not add details beyond the scope of the question."""),
+Be detailed in your answers but stay focused to the question. Add all details that are useful to provide a complete answer, but do not add details beyond the scope of the question.
+
+When using tools, filter by sistem when possible to enhace performance. The list of possible sistems is
+<sistemas>
+AhorroProgramado
+CadenadeCierre
+Calendarios
+CASHManagement
+Clientes
+ConfiguracionBantotal
+Contabilidad
+CuentasCorrientes
+CuentasdeAhorro
+CuentasVista
+DepositosaPlazo
+DescuentodeDocumentos
+Indicadores
+Microfinanzas
+ModeladordePrestamos
+PAE
+ParametrosBase
+Personas
+Precios
+Prestamos
+ReglasdeNegocio
+Seguridad
+TarjetasdeDebito
+Usuarios
+Workflow
+</sistemas>
+        
+"""),
         MessagesPlaceholder(variable_name="chat_history"),
         ("human", "{input}"),
         MessagesPlaceholder(variable_name="agent_scratchpad"),
