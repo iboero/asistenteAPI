@@ -43,7 +43,7 @@ def remover_tildes(input_str):
     # Filtrar para quitar los caracteres de combinación (diacríticos)
     return ''.join(c for c in normalized_str if unicodedata.category(c) != 'Mn')
 
-crear_dataset = False
+crear_dataset = True
 with open('metodos_obj_str.pkl', 'rb') as archivo:
     metodos_lista = pickle.load(archivo)
 
