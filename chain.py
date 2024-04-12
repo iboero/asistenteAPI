@@ -59,17 +59,21 @@ with open('metodos_obj_str.pkl', 'rb') as archivo:
 
 #     db_ret = Chroma.from_documents(docs, OpenAIEmbeddings(), persist_directory="db_RAG")
 # else:
-#     db_ret = Chroma(persist_directory="db_RAG", embedding_function=OpenAIEmbeddings())
 
-CONN_STR = "mongodb+srv://panda:Elachicador7$@asistentes.mongocluster.cosmos.azure.com/?tls=true&authMechanism=SCRAM-SHA-256&retrywrites=false&maxIdleTimeMS=120000"
-DB_NAME = "APIasistente"
-COLLECTION_NAME = "asistente_api_2"
-ATLAS_VECTOR_SEARCH_INDEX_NAME = "index_name"
-NAMESPACE = DB_NAME + '.' + COLLECTION_NAME
+local = int(os.environ["LOCAL"])
 
-db_ret = AzureCosmosDBVectorSearch.from_connection_string(
-    CONN_STR, NAMESPACE, OpenAIEmbeddings(chunk_size=1), index_name=ATLAS_VECTOR_SEARCH_INDEX_NAME
-)
+if local:
+    db_ret = Chroma(persist_directory="db_RAG", embedding_function=OpenAIEmbeddings())
+else:
+    password = os.environ["DB_PASSWORD"]
+    CONN_STR = f"mongodb+srv://panda:{password}@asistentes.mongocluster.cosmos.azure.com/?tls=true&authMechanism=SCRAM-SHA-256&retrywrites=false&maxIdleTimeMS=120000"
+    DB_NAME = "APIasistente"
+    COLLECTION_NAME = "asistente_api_2"
+    ATLAS_VECTOR_SEARCH_INDEX_NAME = "index_name"
+    NAMESPACE = DB_NAME + '.' + COLLECTION_NAME
+    db_ret = AzureCosmosDBVectorSearch.from_connection_string(
+        CONN_STR, NAMESPACE, OpenAIEmbeddings(chunk_size=1), index_name=ATLAS_VECTOR_SEARCH_INDEX_NAME
+    )
 
 # DEFINIR TOOLS
 

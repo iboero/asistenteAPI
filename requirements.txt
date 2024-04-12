@@ -11,3 +11,4 @@ python-dotenv
 chromadb==0.3.29
 fastapi
 uvicorn
+pymongo
