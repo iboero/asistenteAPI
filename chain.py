@@ -25,11 +25,7 @@ from langchain_core.utils.function_calling import convert_to_openai_function
 import unicodedata
 import dill as pickle
 
-from langchain_community.vectorstores.azure_cosmos_db import (
-    AzureCosmosDBVectorSearch,
-    CosmosDBSimilarityType,
-    CosmosDBVectorSearchType,
-)
+from langchain_community.vectorstores.azure_cosmos_db import AzureCosmosDBVectorSearch
 
 ## INICIAR LANGSMITH Y API KEYS
 dotenv_path = here() / ".env"
