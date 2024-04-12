@@ -12,7 +12,7 @@ from langchain.prompts import PromptTemplate
 from langchain_community.vectorstores import Chroma
 from langchain_openai import OpenAIEmbeddings
 from langchain_openai import ChatOpenAI
-from langchain.agents import AgentExecutor, create_openai_tools_agent, create_xml_agent
+from langchain.agents import AgentExecutor, create_openai_tools_agent, create_xml_agent, create_tool_calling_agent
 from langchain.prompts import PromptTemplate, MessagesPlaceholder
 from langchain import hub
 from langchain_anthropic import ChatAnthropic
@@ -24,6 +24,12 @@ from langchain_core.utils.function_calling import convert_to_openai_function
 
 import unicodedata
 import dill as pickle
+
+from langchain_community.vectorstores.azure_cosmos_db import (
+    AzureCosmosDBVectorSearch,
+    CosmosDBSimilarityType,
+    CosmosDBVectorSearchType,
+)
 
 ## INICIAR LANGSMITH Y API KEYS
 dotenv_path = here() / ".env"
@@ -43,22 +49,31 @@ def remover_tildes(input_str):
     # Filtrar para quitar los caracteres de combinación (diacríticos)
     return ''.join(c for c in normalized_str if unicodedata.category(c) != 'Mn')
 
-crear_dataset = True
 with open('metodos_obj_str.pkl', 'rb') as archivo:
     metodos_lista = pickle.load(archivo)
 
+# crear_dataset = True
+# if crear_dataset:
+#     db = Chroma(persist_directory="db_RAG", embedding_function=OpenAIEmbeddings())
+#     db.delete_collection()
+#     docs = []
 
-if crear_dataset:
-    db = Chroma(persist_directory="db_RAG", embedding_function=OpenAIEmbeddings())
-    db.delete_collection()
-    docs = []
+#     for metod in metodos_lista:
+#         docs.append(Document(page_content=metod.descripcion, metadata={"nombre":metod.nombre,"sistema":metod.sistema}))
 
-    for metod in metodos_lista:
-        docs.append(Document(page_content=metod.descripcion, metadata={"nombre":metod.nombre,"sistema":metod.sistema}))
+#     db_ret = Chroma.from_documents(docs, OpenAIEmbeddings(), persist_directory="db_RAG")
+# else:
+#     db_ret = Chroma(persist_directory="db_RAG", embedding_function=OpenAIEmbeddings())
 
-    db_ret = Chroma.from_documents(docs, OpenAIEmbeddings(), persist_directory="db_RAG")
-else:
-    db_ret = Chroma(persist_directory="db_RAG", embedding_function=OpenAIEmbeddings())
+CONN_STR = "mongodb+srv://panda:Elachicador7$@asistentes.mongocluster.cosmos.azure.com/?tls=true&authMechanism=SCRAM-SHA-256&retrywrites=false&maxIdleTimeMS=120000"
+DB_NAME = "APIasistente"
+COLLECTION_NAME = "asistente_api_2"
+ATLAS_VECTOR_SEARCH_INDEX_NAME = "index_name"
+NAMESPACE = DB_NAME + '.' + COLLECTION_NAME
+
+db_ret = AzureCosmosDBVectorSearch.from_connection_string(
+    CONN_STR, NAMESPACE, OpenAIEmbeddings(chunk_size=1), index_name=ATLAS_VECTOR_SEARCH_INDEX_NAME
+)
 
 # DEFINIR TOOLS
 
