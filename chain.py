@@ -17,6 +17,8 @@ from langchain.prompts import PromptTemplate, MessagesPlaceholder
 from langchain import hub
 from langchain_anthropic import ChatAnthropic
 from langchain_openai import AzureChatOpenAI
+from langchain_openai import AzureOpenAIEmbeddings
+from langchain_community.vectorstores import AzureSearch
 
 
 from langchain.pydantic_v1 import BaseModel, Field
@@ -62,18 +64,16 @@ with open('metodos_obj_str.pkl', 'rb') as archivo:
 # else:
 
 local = int(os.environ["LOCAL"])
+embeddings = AzureOpenAIEmbeddings(model="text-embedding-ada-002")
 
 if local:
-    db_ret = Chroma(persist_directory="db_RAG", embedding_function=OpenAIEmbeddings())
+    db_ret = Chroma(persist_directory="db_RAG", embedding_function=embeddings)
 else:
-    password = os.environ["DB_PASSWORD"]
-    CONN_STR = f"mongodb+srv://panda:{password}@asistentes.mongocluster.cosmos.azure.com/?tls=true&authMechanism=SCRAM-SHA-256&retrywrites=false&maxIdleTimeMS=120000"
-    DB_NAME = "APIasistente"
-    COLLECTION_NAME = "asistente_api_2"
-    ATLAS_VECTOR_SEARCH_INDEX_NAME = "index_name"
-    NAMESPACE = DB_NAME + '.' + COLLECTION_NAME
-    db_ret = AzureCosmosDBVectorSearch.from_connection_string(
-        CONN_STR, NAMESPACE, OpenAIEmbeddings(chunk_size=1), index_name=ATLAS_VECTOR_SEARCH_INDEX_NAME
+    db_ret =  AzureSearch(
+        embedding_function=embeddings.embed_query,
+        azure_search_endpoint=os.getenv("AZURE_AI_SEARCH_SERVICE_NAME"),
+        azure_search_key=os.getenv("AZURE_AI_SEARCH_API_KEY"),
+        index_name="api",
     )
 
 # DEFINIR TOOLS
