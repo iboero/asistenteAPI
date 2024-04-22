@@ -16,6 +16,7 @@ from langchain.agents import AgentExecutor, create_openai_tools_agent, create_xm
 from langchain.prompts import PromptTemplate, MessagesPlaceholder
 from langchain import hub
 from langchain_anthropic import ChatAnthropic
+from langchain_openai import AzureChatOpenAI
 
 
 from langchain.pydantic_v1 import BaseModel, Field
@@ -179,7 +180,11 @@ tools = [get_method, get_method_info,get_all_method_from_sistem]
 
 # DEFINIR AGENTE
 
-openai = ChatOpenAI(model="gpt-3.5-turbo",temperature=0.0,streaming=True)
+# openai = ChatOpenAI(model="gpt-3.5-turbo",temperature=0.0,streaming=True)
+openai  = AzureChatOpenAI(
+    deployment_name="gpt-35-turbo-16k",
+    temperature=0.0
+)
 antrhopic = ChatAnthropic(temperature=0, model_name="claude-3-haiku-20240307")
 
 chat_template = ChatPromptTemplate.from_messages(
