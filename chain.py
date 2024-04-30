@@ -113,7 +113,6 @@ def get_method(method_description:str, sistem: str="all"):
     for metod in ret_metodos_obj:
         resp +=  method_info_as_string(metod) + "\n"
     return resp
-
 @tool("get_method_info_from_name", args_schema=method_name)
 def get_method_info(method:str, sistem: str="all"):
     """ Returns information (input-ouput squeema, possible errors and calling example using Soap or JSON) of a method. The parameter sistem is used to filter the search of the method to a given sistem """
