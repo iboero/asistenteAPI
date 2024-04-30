@@ -180,11 +180,11 @@ tools = [get_method, get_method_info,get_all_method_from_sistem]
 
 # DEFINIR AGENTE
 
-# openai = ChatOpenAI(model="gpt-3.5-turbo",temperature=0.0,streaming=True)
-openai  = AzureChatOpenAI(
-    deployment_name="gpt-35-turbo-16k",
-    temperature=0.0
-)
+openai = ChatOpenAI(model="gpt-3.5-turbo",temperature=0.0,streaming=True)
+# openai  = AzureChatOpenAI(
+#     deployment_name="gpt-35-turbo-16k",
+#     temperature=0.0
+# )
 antrhopic = ChatAnthropic(temperature=0, model_name="claude-3-haiku-20240307")
 
 chat_template = ChatPromptTemplate.from_messages(
