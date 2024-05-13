@@ -1,0 +1,9 @@
+Pregunta,Respuesta,Seccion,Positivo,Comentario
+obtener info de persona,"Los 3 métodos más relevantes son: 
+ <ul><li><strong>ObtenerInformacionAdicional</strong> (Personas).  Método para obtener la información adicional de una persona. 
+ 
+ </li><li><strong>ObtenerPersonaJuridica</strong> (Personas).  Método para obtener la información de una persona jurídica. 
+ 
+ </li><li><strong>Obtener</strong> (Personas).  Método para obtener los datos de una persona. 
+ 
+ </li></ul>",Todos,1,
