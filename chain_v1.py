@@ -78,7 +78,6 @@ else:
 
 # DEFINIR TOOLS
 
-
 class sistem(BaseModel):
     sistem: str = Field(description="Sistem to which get the method")
 
