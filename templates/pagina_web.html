@@ -95,8 +95,8 @@
         #sendButton { cursor: pointer; background-color: #000; color: #fff; border: none; border-radius: 15px; width: 30px; height: 30px; position: absolute; right: 0; top: 78%; transform: translateY(-50%); display: flex; align-items: center; justify-content: center; }
         .header {
             display: flex;
-            align-items: center; /* Asegura la alineación vertical */
-            justify-content: flex-start; /* Elementos alineados al inicio */
+            align-items: center; /* Ensure vertical alignment */
+            justify-content: space-between; /* Space elements evenly */
             padding-right: 20px;
             margin-top: 5px;
             margin-bottom: 5px;
@@ -128,7 +128,11 @@
             margin: 5px;
             cursor: pointer;
             }
-
+        .select-container {
+            position: absolute;
+            left: 90%; /* Position it at 70% of the total width */
+            transform: translateX(-50%);
+        }
         .feedback-buttons-container {
             position: relative; 
             float: right;
@@ -180,10 +184,12 @@
         <div class="header">
             <button id="newChatButton">+</button>
             <h2>Asistente <span class="red">&gt;</span>Bantotal</h2>
-            <select id="versionSelect" onchange="selectVersion()">
-                <option value="1">v1</option>
-                <option value="2" selected>v2</option>
-            </select>
+            <div class="select-container">
+                <select id="versionSelect" onchange="selectVersion()">
+                    <option value="2">version 2</option>
+                    <option value="1">version 1</option>
+                </select>
+            </div>
         </div>
         <div id="chat"></div>
         <div id="message-container">
