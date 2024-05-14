@@ -80,7 +80,7 @@ class method_decription(BaseModel):
 
 class method_name(BaseModel):
     method: str = Field(description="Method to search information of")
-    sistems: List[str] = Field(description="Sistems raleted to the method")
+    sistem: str = Field(description="Select sistem to filter the search", default="all")
 
 
 
@@ -118,7 +118,7 @@ def get_method(method_description:str):
 
 
 ## TOOL INFORMACION DE UN METODO
-@tool("get_method_info_from_name", args_schema=method_name)
+@tool("get_method_info", args_schema=method_name)
 def get_method_info(method:str, sistem: str="all"):
     """ Returns information (input-ouput squeema, possible errors and calling example using Soap or JSON) of BTServices methods. The parameter sistem is used to filter the search of the method to a given sistem """
 
