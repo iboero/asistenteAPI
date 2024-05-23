@@ -87,28 +87,25 @@ class method_name(BaseModel):
 
 ## TOOL BUSCAR METODO
 @tool("get_methods_from_description", args_schema=method_decription)
-def get_method(method_description:str):
+def get_methods_from_description(method_description:str):
     """ Returns a list of relevant methods provided a description. The parameter sistem is used to filter the search of the methods to a given sistem"""
 
     # Pure Vector Search
     vector_query = VectorizedQuery(vector=embeddings.embed_query(method_description), k_nearest_neighbors=15, fields="content_vector", exhaustive=True)
     results = search_client.search(vector_queries= [vector_query],select=["sistem", "content","id"])
 
-    ret_metods_names = []
-    ret_metods_sistems = []
+    ret_metods = []
     for res in results:
-        ret_metods_names.append(res["id"].split("_")[1])
-        ret_metods_sistems.append(res["id"].split("_")[0])
-        
+        ret_metods.append(res["id"])
+    
+    ret_metods = list(set(ret_metods))
     ret_metodos_obj = []
     indices_list = []
     for met in metodos_lista:
-        if met.nombre in ret_metods_names:
-            indices = [indice for indice, elemento in enumerate(ret_metods_names) if elemento == met.nombre]
-            for i in indices:
-                if met.sistema in ret_metods_sistems[i]: 
-                    ret_metodos_obj.append(met)
-                    indices_list.append(i)
+        if met.sistema + "_" + met.nombre in ret_metods:
+            ret_metodos_obj.append(met)
+            indices_list.append(ret_metods.index(met.sistema + "_" + met.nombre))
+
     ret_metodos_obj_orden = sorted(zip(indices_list, ret_metodos_obj))
     ret_metodos_obj = [elemento for valor, elemento in ret_metodos_obj_orden]
     resp = ""
@@ -245,7 +242,7 @@ def method_info_as_string(metod,params_info=False):
         strng  += f"{metod.ej_in} \n {metod.ej_out}"
     return strng
 
-tools = [get_method, get_method_info,get_all_method_from_sistem] + manual_tools
+tools = [get_methods_from_description, get_method_info,get_all_method_from_sistem] + manual_tools
 
 
 
