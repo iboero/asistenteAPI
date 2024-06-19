@@ -242,7 +242,7 @@ def method_info_as_string(metod,params_info=False):
         strng  += f"{metod.ej_in} \n {metod.ej_out}"
     return strng
 
-tools = [get_methods_from_description, get_method_info,get_all_method_from_sistem] + manual_tools
+tools = [get_methods_from_description, get_method_info,get_all_method_from_sistem]# + manual_tools
 
 
 
