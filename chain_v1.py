@@ -73,7 +73,7 @@ else:
         embedding_function=embeddings.embed_query,
         azure_search_endpoint=os.getenv("AZURE_AI_SEARCH_SERVICE_NAME"),
         azure_search_key=os.getenv("AZURE_AI_SEARCH_API_KEY"),
-        index_name="api5",
+        index_name="api2",
     )
 
 # DEFINIR TOOLS
