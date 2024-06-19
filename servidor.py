@@ -65,7 +65,7 @@ async def generate_data(message, tab_id):
     print(version)
     print(version == "2")
     if version == "2":
-        agent_executor = agent_executor_v2
+        agent_executor = agent_executor_v1
     else:
         agent_executor = agent_executor_v1
     
