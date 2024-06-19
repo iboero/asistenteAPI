@@ -345,6 +345,48 @@
                 transform: rotate(360deg);
             }
         }
+
+        /* Estilos de codigo */
+        pre code {
+            background-color: #2e2e2e;
+            color: #f8f8f2;
+            padding: 10px;
+            display: block;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            border-radius: 5px;
+        }
+        code.json {
+            color: #66d9ef; /* Cyan */
+        }
+        code.xml {
+            color: #a6e22e; /* Green */
+        }
+        .json .property {
+            color: #f92672; /* Pink */
+        }
+        .json .string {
+            color: #e6db74; /* Yellow */
+        }
+        .json .number {
+            color: #ae81ff; /* Purple */
+        }
+        .json .boolean {
+            color: #fd971f; /* Orange */
+        }
+        .json .null {
+            color: #fd971f; /* Orange */
+        }
+        .xml .tag {
+            color: #f92672; /* Pink */
+        }
+        .xml .attribute {
+            color: #e6db74; /* Yellow */
+        }
+        .xml .value {
+            color: #a6e22e; /* Green */
+        }
      </style>
 </head>
 
@@ -439,6 +481,7 @@
                     // Aquí, iniciar EventSource tras éxito del POST inicial
                     var eventSource = new EventSource('/stream?tabId=' + encodeURIComponent(tabId)); // Usar una nueva ruta, por ejemplo, '/stream'
                     let messageContainer;
+                    let fullMessage = '';
                     eventSource.onmessage = function (event) {
                         const data = event.data;
                         if (data === "done") {
@@ -450,6 +493,8 @@
                                     <span onclick="showFeedbackBox(this)">Incorrecto</span>
                                 </div>
                             `;
+                            // Formatear el mensaje completo
+                            messageContainer.children[1].innerHTML = formatMessage(fullMessage);
                             // Restablece UI para nueva entrada
                             sendIcon.className = 'sendIcon';
                             sendButton.style.cursor = 'pointer';
@@ -467,6 +512,7 @@
                                 `;
                                 chat.appendChild(messageContainer);
                             }
+                            fullMessage += data.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\|\|/g, '<br>').replace(/\t/g, '&nbsp;&nbsp;&nbsp;&nbsp;');
                             messageContainer.children[1].innerHTML += data.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\|\|/g, '<br>').replace(/\t/g, '&nbsp;&nbsp;&nbsp;&nbsp;');
                             chat.scrollTop = chat.scrollHeight;
                         }
@@ -487,6 +533,25 @@
                     awaitingResponse = false;
                 });
             }
+        }
+        function formatMessage(text) {
+            // Reemplaza ### por títulos solo en la línea
+            text = text.replace(/####\s*(.+?)<br>/g, '<h4>$1</h4>');
+            text = text.replace(/##\s*(.+?)<br>/g, '<h2>$1</h2>');
+            text = text.replace(/###\s*(.+?)<br>/g, '<h3>$1</h3>');
+            // Reemplaza bloques de código JSON
+            text = text.replace(/```json<br>([\s\S]+?)<br>```/g, '<pre><code class="json">$1</code></pre>');
+            // Reemplaza bloques de código XML
+            text = text.replace(/```xml<br>([\s\S]+?)<br>```/g, '<pre><code class="xml">$1</code></pre>');
+            // Reemplaza **text** por <b>text</b>
+            text = text.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+            // Reemplaza listados con <ul> y <li>
+            text = text.replace(/- (.+?)<br>/g, '<li>$1</li><br>');
+            // Encierra los <li> en <ul>
+            text = text.replace(/(<li>[\s\S]*?<\/li>)(<br>)+/g, '<ul>$1</ul>');
+            // Elimina <ul> innecesarios anidados
+            text = text.replace(/<\/ul>\s*<ul>/g, '');
+            return text;
         }
         let shouldCloseFeedback = true;
 
