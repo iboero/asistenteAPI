@@ -35,10 +35,6 @@ dotenv_path = here() / ".env"
 load_dotenv(dotenv_path=dotenv_path)
 
 
-client = Client()
-
-unique_id = uuid4().hex[0:8]
-os.environ["LANGCHAIN_PROJECT"] = f"API - {unique_id}"
 
 
 # LEVANTAR DATOS

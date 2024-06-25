@@ -27,6 +27,15 @@ from chain_v1 import agent_executor as agent_executor_v1
 
 import asyncio
 
+dotenv_path = here() / ".env"
+load_dotenv(dotenv_path=dotenv_path)
+
+
+client = Client()
+
+unique_id = uuid4().hex[0:8]
+os.environ["LANGCHAIN_PROJECT"] = f"API - {unique_id}"
+
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
@@ -65,10 +74,10 @@ async def generate_data(message, tab_id):
     print(version)
     print(version == "2")
     if version == "2":
-        agent_executor = agent_executor_v1
+        agent_executor = agent_executor_v2
     else:
-        agent_executor = agent_executor_v1
-    
+        agent_executor = agent_executor_v2
+            
     async for chunk in agent_executor.astream_events({"input": message, "chat_history": chat_history}, version="v1"):
         if chunk["event"] == "on_chat_model_stream":
             content = chunk["data"]["chunk"].content

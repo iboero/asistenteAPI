@@ -41,10 +41,6 @@ dotenv_path = here() / ".env"
 load_dotenv(dotenv_path=dotenv_path)
 
 
-client = Client()
-
-unique_id = uuid4().hex[0:8]
-os.environ["LANGCHAIN_PROJECT"] = f"API - {unique_id}"
 
 
 # LEVANTAR DATOS
@@ -59,7 +55,6 @@ with open('metodos_obj_str.pkl', 'rb') as archivo:
 
 
 embeddings = AzureOpenAIEmbeddings(model="text-embedding-ada-002")
-
 
 
 index_name = "api5"
@@ -92,7 +87,7 @@ def get_methods_from_description(method_description:str):
 
     # Pure Vector Search
     vector_query = VectorizedQuery(vector=embeddings.embed_query(method_description), k_nearest_neighbors=15, fields="content_vector", exhaustive=True)
-    results = search_client.search(vector_queries= [vector_query],select=["sistem", "content","id"])
+    results = search_client.search(vector_queries= [vector_query],filter="", select=["sistem", "content","id"])
 
     ret_metods = []
     for res in results:
@@ -136,11 +131,11 @@ def get_method_info(method:str, sistem: str="all"):
     # In case exact match doesnt work
     if len(ret_metodos_obj) == 0:
         filter=""
-        if sistem != "all":
-            filter = f"sistem eq '{sistem}'"
+        # if sistem != "all":
+        #     filter = f"sistem eq '{sistem}'"
         # Pure Vector Search
         vector_query = VectorizedQuery(vector=embeddings.embed_query(method), k_nearest_neighbors=10, fields="content_vector", exhaustive=True)
-        results = search_client.search(vector_queries= [vector_query],filter=filter,select=["sistem", "content","id"])
+        results = search_client.search(vector_queries= [vector_query],select=["sistem", "content","id"])
 
         ret_metods_names = []
         ret_metods_sistems = []
