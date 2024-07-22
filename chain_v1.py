@@ -277,4 +277,3 @@ Question: {input}
 
 agent = create_openai_tools_agent(openai, tools, chat_template)
 agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=False)
-

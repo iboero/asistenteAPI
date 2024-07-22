@@ -245,9 +245,11 @@ tools = [get_methods_from_description, get_method_info,get_all_method_from_siste
 
 # DEFINIR AGENTE
 
-openai = ChatOpenAI(model="gpt-3.5-turbo",temperature=0.0,streaming=True)
+openai = AzureChatOpenAI(
+    deployment_name="gpt-4o",
+    temperature=0.0,
 
-
+)
 
 chat_template = ChatPromptTemplate.from_messages(
     [
